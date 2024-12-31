@@ -3,32 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\News;
+use GuzzleHttp\Client;
 
 class NewsController extends Controller
 {
-    public function create()
+    public function index()
     {
-        return view('news.create');
-    }
+        $client = new Client(['verify' => false]); // Nonaktifkan verifikasi SSL
+        $apiKey = 'e44f5d3a55444b5fa02d5be7878298f6'; // Ganti dengan API Key Anda
+        $url = 'https://newsapi.org/v2/top-headlines';
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'photo' => 'required|image|max:2048',
-        ]);
+        try {
+            $response = $client->get($url, [
+                'query' => [
+                    'country' => 'us',
+                    'category' => 'business',
+                    'apiKey' => $apiKey,
+                ],
+            ]);
 
-        $path = $request->file('photo')->store('news', 'public');
+            $data = json_decode($response->getBody(), true);
 
-        News::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'photo' => $path,
-            'user_id' => auth()->id(),
-        ]);
-
-        return redirect()->route('dashboard')->with('status', 'News created successfully!');
+            // Kirim data berita ke view
+            return view('dashboard.index', ['articles' => $data['articles']]);
+        } catch (\Exception $e) {
+            // Tangani error jika terjadi kesalahan saat mengambil data
+            return view('news.create', [
+                'articles' => [],
+                'error' => 'Tidak dapat mengambil berita saat ini. ' . $e->getMessage(),
+            ]);
+        }
     }
 }

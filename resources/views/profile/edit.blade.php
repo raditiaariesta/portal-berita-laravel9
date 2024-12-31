@@ -56,11 +56,6 @@
 
     <hr>
 
-    <!-- Create News Form -->
-    <form action="{{ route('news.create') }}" method="POST">
-
-        <button type="submit" class="btn btn-primary">Create News</button>
-    </form>
 
     <hr>
 
